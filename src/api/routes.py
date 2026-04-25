@@ -14,25 +14,23 @@ logger = logging.getLogger(__name__)
 async def get_jobs(request: Request):
     logger.info("GET /jobs endpoint called")
     
-    # cached = load_cache()
-    # if cached:
-    #     logger.info("Returning cached data")
-    #     return {
-    #         "source": "cache",
-    #         "data": cached
-    #     }
+    cached = load_cache()
+    if cached:
+        logger.info("Returning cached data")
+        return {
+            "source": "cache",
+            "data": cached
+        }
 
     try:
         logger.info("Starting scrape operation")
         scraped_results = scrape()
         logger.info(f"Scrape completed, got {len(scraped_results)} results")
-        
-        logger.info("Parsing job listings from scraped data using ASI agent")
+    
         agent = JobParserAgent()
         parsed_jobs = agent.process(scraped_results)
         logger.info(f"Parsed {len(parsed_jobs)} job listings")
         
-        logger.info("Saving parsed results to cache")
         save_cache(parsed_jobs)
         logger.info("Cache saved successfully")
 

@@ -1,51 +1,39 @@
 import json
 import logging
-import os
-from datetime import datetime, timedelta, timezone
+from upstash_redis import Redis
 from src.core.config import settings
 
 logger = logging.getLogger(__name__)
 
+CACHE_KEY = "freelanceos:jobs"
+
+
+def _get_client() -> Redis:
+    return Redis(
+        url=settings.UPSTASH_REDIS_REST_URL,
+        token=settings.UPSTASH_REDIS_REST_TOKEN
+    )
+
 
 def load_cache():
-    logger.info(f"Attempting to load cache from {settings.CACHE_FILE}")
-    if not os.path.exists(settings.CACHE_FILE):
-        logger.info("Cache file does not exist")
-        return None
-
     try:
-        with open(settings.CACHE_FILE, "r") as f:
-            data = json.load(f)
-        logger.info("Cache file loaded successfully")
-
-        timestamp = datetime.fromisoformat(data["timestamp"])
-        ttl = timedelta(minutes=settings.CACHE_TTL_MINUTES)
-        logger.info(f"Cache timestamp: {timestamp}, TTL: {settings.CACHE_TTL_MINUTES} minutes")
-
-        if datetime.now(timezone.utc) - timestamp > ttl:
-            logger.info("Cache expired")
+        redis = _get_client()
+        data = redis.get(CACHE_KEY)
+        if data is None:
+            logger.info("Cache miss")
             return None
-
-        logger.info("Returning cached data")
-        return data["results"]
+        logger.info("Cache hit")
+        return json.loads(data)
     except Exception as e:
-        logger.error(f"Error loading cache: {str(e)}", exc_info=True)
+        logger.error(f"Error loading cache: {e}")
         return None
 
 
 def save_cache(results):
-    logger.info(f"Saving {len(results)} results to cache at {settings.CACHE_FILE}")
     try:
-        with open(settings.CACHE_FILE, "w") as f:
-            json.dump(
-                {
-                    "timestamp": datetime.now(timezone.utc).isoformat(),
-                    "results": results,
-                },
-                f,
-                indent=2,
-            )
-        logger.info("Cache saved successfully")
+        redis = _get_client()
+        redis.set(CACHE_KEY, json.dumps(results), ex=settings.CACHE_TTL_SECONDS)
+        logger.info(f"Saved {len(results)} results to Redis (TTL: {settings.CACHE_TTL_SECONDS}s)")
     except Exception as e:
-        logger.error(f"Error saving cache: {str(e)}", exc_info=True)
+        logger.error(f"Error saving cache: {e}")
         raise

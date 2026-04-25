@@ -14,6 +14,7 @@ class Settings:
         "https://www.fiverr.com/categories/programming-tech",
     ]
     CACHE_FILE: str = "jobs.json"
+    CLASSIFIED_CACHE_FILE: str = "classified_output.json"
     CACHE_TTL_MINUTES: int = 30
     RATE_LIMIT: str = "5/hour"
 

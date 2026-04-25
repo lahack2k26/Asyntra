@@ -19,6 +19,7 @@ build/
 
 # Cache
 jobs.json
+classified_output.json
 
 # IDE
 .vscode/

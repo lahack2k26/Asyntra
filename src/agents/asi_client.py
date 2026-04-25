@@ -1,10 +1,6 @@
-import logging
 import requests
-import json
 from typing import List, Dict
 from src.core.config import settings
-
-logger = logging.getLogger(__name__)
 
 
 class ASIClient:

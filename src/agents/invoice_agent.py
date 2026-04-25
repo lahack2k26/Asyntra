@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 
 class InvoiceAgent(BaseAgent):
-    """Agent that generates budget, timeline and scaling analysis per project."""
+
     prompt_file = "invoice_prompt.txt"
 
     def process(self, classified_data: Dict) -> Dict:

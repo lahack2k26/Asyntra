@@ -38,8 +38,7 @@ def scrape():
             logger.info(f"Successfully scraped {target_url}")
             results.append(result)
         except Exception as e:
-            logger.error(f"Error scraping {target_url}: {str(e)}", exc_info=True)
-            raise
+            logger.error(f"Error scraping {target_url}: {str(e)}")
 
     logger.info(f"Scrape completed with {len(results)} results")
     return results

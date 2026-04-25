@@ -6,6 +6,7 @@ from src.core.config import settings
 logger = logging.getLogger(__name__)
 
 CACHE_KEY = "freelanceos:jobs"
+CLASSIFIED_CACHE_KEY = "freelanceos:classified"
 INVOICE_CACHE_KEY = "freelanceos:invoices"
 
 
@@ -37,6 +38,30 @@ def save_cache(results):
         logger.info(f"Saved {len(results)} results to Redis (TTL: {settings.CACHE_TTL_SECONDS}s)")
     except Exception as e:
         logger.error(f"Error saving cache: {e}")
+        raise
+
+
+def load_classified_cache():
+    try:
+        redis = _get_client()
+        data = redis.get(CLASSIFIED_CACHE_KEY)
+        if data is None:
+            logger.info("Classified cache miss")
+            return None
+        logger.info("Classified cache hit")
+        return json.loads(data)
+    except Exception as e:
+        logger.error(f"Error loading classified cache: {e}")
+        return None
+
+
+def save_classified_cache(classified_data):
+    try:
+        redis = _get_client()
+        redis.set(CLASSIFIED_CACHE_KEY, json.dumps(classified_data), ex=settings.CACHE_TTL_SECONDS)
+        logger.info("Classified data saved to Redis")
+    except Exception as e:
+        logger.error(f"Error saving classified cache: {e}")
         raise
 
 

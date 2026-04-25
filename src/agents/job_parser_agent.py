@@ -2,7 +2,7 @@ import logging
 import json
 import os
 from typing import List, Dict
-from src.agents.asi_client import ASIClient
+from src.agents.asi_client import default_client
 from src.core.config import settings
 
 logger = logging.getLogger(__name__)
@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 class JobParserAgent:
     
     def __init__(self):
-        self.client = ASIClient()
+        self.client = default_client
         self.system_prompt = self._load_prompt()
     
     def _load_prompt(self) -> str:

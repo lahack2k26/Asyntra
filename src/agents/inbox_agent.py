@@ -3,17 +3,15 @@ import json
 import os
 from datetime import datetime, timezone
 from typing import List, Dict
-from src.agents.asi_client import ASIClient
+from src.agents.asi_client import default_client
 
 logger = logging.getLogger(__name__)
-
-TECH_CATEGORIES = {"web_development", "mobile_development", "api_development", "devops", "ai_ml", "data_science", "blockchain", "iot_development", "security_development"}
 
 
 class InboxAgent:
 
     def __init__(self):
-        self.client = ASIClient()
+        self.client = default_client
         self.system_prompt = self._load_prompt()
 
     def _load_prompt(self) -> str:
@@ -105,7 +103,6 @@ class InboxAgent:
         raw_requirements = project.pop("_raw_key_requirements", [])
         raw_description = project.pop("_raw_description", "")
         category = project.get("metadata", {}).get("category", "")
-        is_tech = category in TECH_CATEGORIES
 
         try:
             logger.info(f"Enriching project: {project.get('project_id')}")
@@ -118,7 +115,6 @@ class InboxAgent:
                         "title": project.get("title"),
                         "description": raw_description,
                         "category": category,
-                        "is_tech_project": is_tech,
                         "technical_stack": raw_stack,
                         "key_requirements": raw_requirements
                     })

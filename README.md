@@ -1,2 +1,2 @@
-# LAhacks
+# FreeLanceOS
 la hacks project

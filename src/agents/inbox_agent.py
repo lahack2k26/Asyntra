@@ -1,39 +1,67 @@
-import json
 import logging
+import json
+import os
 from datetime import datetime, timezone
 from typing import List, Dict
-from src.agents.base_agent import BaseAgent
+from src.agents.asi_client import default_client
 
 logger = logging.getLogger(__name__)
 
-class InboxAgent(BaseAgent):
-    prompt_file = "classification_prompt.txt"
+
+class InboxAgent:
+
+    def __init__(self):
+        self.client = default_client
+        self.system_prompt = self._load_prompt()
+
+    def _load_prompt(self) -> str:
+        path = os.path.join(os.path.dirname(__file__), "../config/classification_prompt.txt")
+        with open(path, 'r') as f:
+            return f.read()
 
     def process(self, jobs: List[Dict]) -> Dict:
         logger.info(f"InboxAgent received {len(jobs)} jobs")
-        filtered = [j for j in jobs if ((j.get("client") or {}).get("name") or "").strip()]
-        logger.info(f"After filter: {len(filtered)} jobs with named clients")
+
+        filtered = self._filter_jobs(jobs)
+        logger.info(f"After filter: {len(filtered)} jobs with named clients (skipped {len(jobs) - len(filtered)})")
 
         grouped = self._group_by_company(filtered)
+        logger.info(f"Grouped into {len(grouped)} companies")
+
         companies = []
-        for company_data in grouped.values():
-            company_data["projects"] = [self._enrich_project(p) for p in company_data["projects"]]
+        for company_name, company_data in grouped.items():
+            enriched_projects = []
+            for project in company_data["projects"]:
+                enriched = self._enrich_project(project)
+                enriched_projects.append(enriched)
+            company_data["projects"] = enriched_projects
             companies.append(company_data)
 
         output = {
             "classified_at": datetime.now(timezone.utc).isoformat(),
             "total_companies": len(companies),
             "total_projects": sum(len(c["projects"]) for c in companies),
-            "companies": companies,
+            "companies": companies
         }
+
         logger.info(f"Classification complete: {output['total_companies']} companies, {output['total_projects']} projects")
         return output
+
+    def _filter_jobs(self, jobs: List[Dict]) -> List[Dict]:
+        filtered = []
+        for job in jobs:
+            name = job.get("client", {}).get("name")
+            if name and name.strip():
+                filtered.append(job)
+            else:
+                logger.info(f"Skipping job {job.get('project_id')} — client.name is null")
+        return filtered
 
     def _group_by_company(self, jobs: List[Dict]) -> Dict:
         grouped = {}
         for job in jobs:
             client = job.get("client", {})
-            company_name = (client.get("name") or "").strip()
+            company_name = client["name"].strip()
             company_id = company_name.lower().replace(" ", "_").replace(".", "").replace(",", "")
 
             if company_name not in grouped:
@@ -72,33 +100,39 @@ class InboxAgent(BaseAgent):
 
     def _enrich_project(self, project: Dict) -> Dict:
         raw_stack = project.pop("_raw_technical_stack", [])
-        raw_reqs = project.pop("_raw_key_requirements", [])
-        raw_desc = project.pop("_raw_description", "")
+        raw_requirements = project.pop("_raw_key_requirements", [])
+        raw_description = project.pop("_raw_description", "")
         category = project.get("metadata", {}).get("category", "")
 
         try:
+            logger.info(f"Enriching project: {project.get('project_id')}")
             messages = [
                 {"role": "system", "content": self.system_prompt},
-                {"role": "user", "content": json.dumps({
-                    "project_id": project.get("project_id"),
-                    "title": project.get("title"),
-                    "description": raw_desc,
-                    "category": category,
-                    "technical_stack": raw_stack,
-                    "key_requirements": raw_reqs,
-                })},
+                {
+                    "role": "user",
+                    "content": json.dumps({
+                        "project_id": project.get("project_id"),
+                        "title": project.get("title"),
+                        "description": raw_description,
+                        "category": category,
+                        "technical_stack": raw_stack,
+                        "key_requirements": raw_requirements
+                    })
+                }
             ]
             response = self.client.chat_completion(messages)
-            clean = response.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
-            enriched = json.loads(clean)
+            logger.info(f"ASI enrichment response for {project.get('project_id')}: {response[:300]}...")
+            clean_response = response.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
+            enriched = json.loads(clean_response)
+
             project["category"] = enriched.get("category", category)
             project["technical_requirements"] = enriched.get("technical_requirements", {})
             project["requirements"] = enriched.get("requirements", {})
 
         except Exception as e:
-            logger.error(f"Enrichment failed for {project.get('project_id')}: {e}")
+            logger.error(f"Enrichment failed for {project.get('project_id')}: {e}", exc_info=True)
             project["category"] = category
             project["technical_requirements"] = {"unclassified": raw_stack}
-            project["requirements"] = {"unclassified": raw_reqs}
+            project["requirements"] = {"unclassified": raw_requirements}
 
         return project

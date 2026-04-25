@@ -15,7 +15,9 @@ class Settings:
         "https://www.toptal.com/developers",
         "https://www.fiverr.com/categories/programming-tech",
     ]
-    CACHE_TTL_SECONDS: int = 1800
+    CACHE_FILE: str = "jobs.json"
+    CLASSIFIED_CACHE_FILE: str = "classified_output.json"
+    CACHE_TTL_MINUTES: int = 30
     RATE_LIMIT: str = "5/hour"
 
 

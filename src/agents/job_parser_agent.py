@@ -1,13 +1,22 @@
 import logging
 import json
 from typing import List, Dict
-from src.agents.base_agent import BaseAgent
+from src.agents.asi_client import default_client
+from src.core.config import settings
 
 logger = logging.getLogger(__name__)
 
 
-class JobParserAgent(BaseAgent):
-    prompt_file = "system_prompt.txt"
+class JobParserAgent:
+    
+    def __init__(self):
+        self.client = default_client
+        self.system_prompt = self._load_prompt()
+    
+    def _load_prompt(self) -> str:
+        path = os.path.join(os.path.dirname(__file__), "../config/system_prompt.txt")
+        with open(path, 'r') as f:
+            return f.read()
     
     def process(self, scraped_data: List[Dict]) -> List[Dict]:
         all_jobs = []

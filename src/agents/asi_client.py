@@ -20,3 +20,6 @@ class ASIClient:
         response.raise_for_status()
         result = response.json()
         return result['choices'][0]['message']['content'].strip()
+
+
+default_client = ASIClient()

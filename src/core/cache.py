@@ -6,6 +6,7 @@ from src.core.config import settings
 logger = logging.getLogger(__name__)
 
 CACHE_KEY = "freelanceos:jobs"
+INVOICE_CACHE_KEY = "freelanceos:invoices"
 
 
 def _get_client() -> Redis:
@@ -36,4 +37,28 @@ def save_cache(results):
         logger.info(f"Saved {len(results)} results to Redis (TTL: {settings.CACHE_TTL_SECONDS}s)")
     except Exception as e:
         logger.error(f"Error saving cache: {e}")
+        raise
+
+
+def load_invoice_cache():
+    try:
+        redis = _get_client()
+        data = redis.get(INVOICE_CACHE_KEY)
+        if data is None:
+            logger.info("Invoice cache miss")
+            return None
+        logger.info("Invoice cache hit")
+        return json.loads(data)
+    except Exception as e:
+        logger.error(f"Error loading invoice cache: {e}")
+        return None
+
+
+def save_invoice_cache(invoice_data):
+    try:
+        redis = _get_client()
+        redis.set(INVOICE_CACHE_KEY, json.dumps(invoice_data), ex=settings.CACHE_TTL_SECONDS)
+        logger.info("Invoice saved to Redis")
+    except Exception as e:
+        logger.error(f"Error saving invoice cache: {e}")
         raise

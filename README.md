@@ -39,10 +39,9 @@ AI-powered operating system for software development freelancers. Automatically 
 
 **Backend**
 ```bash
-git clone <repo-url>
+git clone https://github.com/lahack2k26/Asyntra.git
 cd Asyntra
 pip install -r requirements.txt
-cp .env.example .env   # fill in your keys
 python main.py         # runs on http://localhost:8000
 ```
 

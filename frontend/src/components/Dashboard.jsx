@@ -9,7 +9,7 @@ import { getJobs } from '../api';
 function Sidebar({ currentView, onNavigate, onBack }) {
   const navItems = [
     { id: 'home', label: 'Home', icon: Home, action: onBack },
-    { id: 'pipeline', label: 'Current Projects', icon: FolderKanban, action: () => onNavigate('pipeline') },
+    { id: 'pipeline', label: 'Priority Projects', icon: FolderKanban, action: () => onNavigate('pipeline') },
     { id: 'leads', label: 'Prospects', icon: UserSearch, action: () => onNavigate('leads') },
   ];
 
@@ -309,7 +309,7 @@ export default function Dashboard({ onBack }) {
                   <div className="p-4 bg-purple-900/30 rounded-full group-hover:bg-purple-900/50 transition-colors">
                     <Play className="w-10 h-10 text-purple-400" />
                   </div>
-                  <span className="text-xl font-semibold text-white">Current Projects</span>
+                  <span className="text-xl font-semibold text-white">Priority Projects</span>
                   <span className="text-sm text-slate-400">View active projects</span>
                 </button>
 

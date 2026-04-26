@@ -2,6 +2,12 @@
 
 AI-powered operating system for software development freelancers. Automatically scrapes job listings, classifies them by client using LLM agents, and generates budget and timeline estimates which are surfaced on a live dashboard.
 
+<img width="1024" height="572" alt="image" src="https://github.com/user-attachments/assets/5503a4dd-9518-4ac3-bb72-6d79be70de98" />
+
+
+> **Image disclaimer:** The banner above was generated using an AI image generation
+> tool for presentation purposes only.
+
 ## Features
 
 - **Automated Job Scraping** — Pulls live listings from multiple websites via Firecrawl

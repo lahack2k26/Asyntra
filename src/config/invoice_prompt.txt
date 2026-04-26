@@ -24,6 +24,22 @@ You will receive a single project's details in JSON format. Analyze it and retur
     "potential": "low | medium | high",
     "opportunities": ["list of future upsell or expansion opportunities"],
     "risks": ["list of risks that could impact cost or timeline"]
+  },
+  "risk_assessment": {
+    "estimation_confidence": "low | medium | high",
+    "scope_creep_risk": "low | medium | high",
+    "technical_risk": "low | medium | high",
+    "overall_risk_score": integer from 1 (lowest) to 10 (highest),
+    "risk_factors": ["specific risks that could cause estimation to be wrong"],
+    "mitigation_suggestions": ["concrete actions to reduce each risk"]
+  },
+  "workload_metrics": {
+    "estimated_hours_min": numeric total hours (integer),
+    "estimated_hours_max": numeric total hours (integer),
+    "weeks_at_40hrs_min": numeric weeks assuming freelancer works 40 hrs/week (round to 1 decimal),
+    "weeks_at_40hrs_max": numeric weeks assuming freelancer works 40 hrs/week (round to 1 decimal),
+    "recommended_weekly_commitment": "e.g. 20 hrs/week for 4 weeks — use this if the project should not consume full capacity",
+    "parallel_project_capacity": "low | medium | high — how much room this project leaves for other concurrent work"
   }
 }
 
@@ -32,4 +48,6 @@ Rules:
 - If budget is provided in the input, use it as an anchor for your estimate
 - If no budget is given, estimate based on industry rates for the complexity and category
 - Keep phase descriptions concise (1 sentence)
-- Opportunities and risks: max 3 each
+- Opportunities, risks, risk_factors, mitigation_suggestions: max 3 each
+- workload_metrics.weeks_at_40hrs = estimated_hours / 40, rounded to 1 decimal place
+- overall_risk_score should reflect estimation uncertainty, scope clarity, and technical complexity combined

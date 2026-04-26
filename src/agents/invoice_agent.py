@@ -11,6 +11,8 @@ class InvoiceAgent(BaseAgent):
 
     prompt_file = "invoice_prompt.txt"
 
+    WEEKLY_HOURS = 40
+
     def process(self, classified_data: Dict) -> Dict:
         output = {
             "generated_at": datetime.now(timezone.utc).isoformat(),
@@ -21,8 +23,16 @@ class InvoiceAgent(BaseAgent):
                 "accumulated_budget_min": 0,
                 "accumulated_budget_max": 0,
                 "currency": "USD",
+                "total_hours_min": 0,
+                "total_hours_max": 0,
+                "total_weeks_at_40hrs_min": 0.0,
+                "total_weeks_at_40hrs_max": 0.0,
+                "average_risk_score": 0.0,
+                "high_risk_projects": [],
             },
         }
+
+        risk_scores = []
 
         for company in classified_data.get("companies", []):
             company_result = {
@@ -37,12 +47,38 @@ class InvoiceAgent(BaseAgent):
                 invoice = self._generate_invoice(project)
                 if invoice:
                     company_result["projects"].append(invoice)
-                    company_result["company_total"]["min"] += invoice["budget_estimate"]["min"]
-                    company_result["company_total"]["max"] += invoice["budget_estimate"]["max"]
+
+                    budget = invoice.get("budget_estimate", {})
+                    company_result["company_total"]["min"] += budget.get("min", 0)
+                    company_result["company_total"]["max"] += budget.get("max", 0)
+
+                    workload = invoice.get("workload_metrics", {})
+                    output["summary"]["total_hours_min"] += workload.get("estimated_hours_min", 0)
+                    output["summary"]["total_hours_max"] += workload.get("estimated_hours_max", 0)
+                    output["summary"]["total_weeks_at_40hrs_min"] += workload.get("weeks_at_40hrs_min", 0.0)
+                    output["summary"]["total_weeks_at_40hrs_max"] += workload.get("weeks_at_40hrs_max", 0.0)
+
+                    risk = invoice.get("risk_assessment", {})
+                    score = risk.get("overall_risk_score")
+                    if isinstance(score, (int, float)):
+                        risk_scores.append(score)
+                        if score >= 7:
+                            output["summary"]["high_risk_projects"].append({
+                                "project_id": invoice.get("project_id"),
+                                "title": invoice.get("title"),
+                                "risk_score": score,
+                                "top_risk": (risk.get("risk_factors") or ["unknown"])[0],
+                            })
 
             output["companies"].append(company_result)
             output["summary"]["accumulated_budget_min"] += company_result["company_total"]["min"]
             output["summary"]["accumulated_budget_max"] += company_result["company_total"]["max"]
+
+        if risk_scores:
+            output["summary"]["average_risk_score"] = round(sum(risk_scores) / len(risk_scores), 1)
+
+        output["summary"]["total_weeks_at_40hrs_min"] = round(output["summary"]["total_weeks_at_40hrs_min"], 1)
+        output["summary"]["total_weeks_at_40hrs_max"] = round(output["summary"]["total_weeks_at_40hrs_max"], 1)
 
         return output
 
@@ -53,7 +89,8 @@ class InvoiceAgent(BaseAgent):
                 {"role": "user", "content": json.dumps(project, indent=2)},
             ]
             response = self.client.chat_completion(messages)
-            invoice = json.loads(response)
+            clean = response.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
+            invoice = json.loads(clean)
             logger.info(f"Generated invoice for {project.get('project_id')}")
             return invoice
         except Exception as e:

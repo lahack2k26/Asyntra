@@ -1,111 +1,166 @@
 import { useState } from 'react';
-import { ChevronDown, ChevronRight, Building2, MapPin, Briefcase, DollarSign } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Building2, MapPin, ChevronDown, ChevronUp, DollarSign, TrendingUp, AlertTriangle, Layers } from 'lucide-react';
 import ProjectCard from './ProjectCard';
 
-function CompanyItem({ company, invoiceCompany }) {
+const RANK_STYLES = [
+  'from-yellow-500 to-amber-600 text-white',
+  'from-slate-300 to-slate-400 text-slate-900',
+  'from-amber-700 to-orange-800 text-white',
+  'from-violet-500 to-purple-600 text-white',
+  'from-sky-500 to-blue-600 text-white',
+];
+
+const fmt = (v) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(v);
+
+function RiskPip({ score }) {
+  if (!score) return null;
+  const color = score >= 7 ? 'bg-red-500' : score >= 4 ? 'bg-yellow-500' : 'bg-green-500';
+  return <span className={`inline-block w-2 h-2 rounded-full ${color}`} title={`Risk ${score}/10`} />;
+}
+
+function CompanyItem({ company, invoiceCompany, rank }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const profile = company.client_profile || {};
   const projects = company.projects || [];
   const invoiceProjects = invoiceCompany?.projects || [];
-
-  const formatCurrency = (value) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(value);
-  };
+  const total = invoiceCompany?.company_total;
+  const avgRisk = invoiceProjects.length
+    ? Math.round(invoiceProjects.reduce((s, p) => s + (p?.risk_assessment?.overall_risk_score || 0), 0) / invoiceProjects.length * 10) / 10
+    : null;
 
   return (
-    <div className="border border-slate-700 rounded-lg overflow-hidden">
+    <motion.div layout className="rounded-xl border border-slate-700/60 bg-slate-800/50 backdrop-blur overflow-hidden hover:border-slate-600 transition-colors">
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full flex items-center justify-between p-4 bg-slate-800 hover:bg-slate-750 transition-colors text-left"
+        className="w-full text-left"
       >
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-purple-900/30 rounded-lg">
-            <Building2 className="w-5 h-5 text-purple-400" />
+        <div className="flex items-center gap-3 px-4 py-3">
+          {/* Rank badge */}
+          <div className={`flex-shrink-0 w-7 h-7 rounded-lg bg-gradient-to-br ${RANK_STYLES[rank] || RANK_STYLES[4]} flex items-center justify-center text-xs font-bold shadow`}>
+            #{rank + 1}
           </div>
-          <div>
-            <h3 className="text-white font-semibold">{company.company_name}</h3>
-            <div className="flex items-center gap-3 text-sm text-slate-400 mt-1">
-              {profile.industry && (
-                <span className="flex items-center gap-1">
-                  <Briefcase className="w-3 h-3" />
-                  {profile.industry}
-                </span>
-              )}
+
+          {/* Company info */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <span className="text-white font-semibold text-sm truncate">{company.company_name}</span>
+              {avgRisk !== null && <RiskPip score={avgRisk} />}
+            </div>
+            <div className="flex items-center gap-2 mt-0.5 flex-wrap">
               {profile.location && (
-                <span className="flex items-center gap-1">
-                  <MapPin className="w-3 h-3" />
-                  {profile.location}
+                <span className="text-xs text-slate-500 flex items-center gap-1">
+                  <MapPin className="w-3 h-3" />{profile.location}
                 </span>
               )}
-              {invoiceCompany?.company_total && (
-                <span className="flex items-center gap-1 text-green-400">
-                  <DollarSign className="w-3 h-3" />
-                  {formatCurrency(invoiceCompany.company_total.min)} - {formatCurrency(invoiceCompany.company_total.max)}
-                </span>
+              {profile.industry && (
+                <span className="text-xs text-slate-500 truncate">{profile.industry}</span>
               )}
             </div>
           </div>
-        </div>
-        <div className="flex items-center gap-3">
-          <span className="px-2 py-1 bg-slate-700 text-slate-300 rounded text-sm">
-            {projects.length} project{projects.length !== 1 ? 's' : ''}
-          </span>
-          {isExpanded ? (
-            <ChevronDown className="w-5 h-5 text-slate-400" />
-          ) : (
-            <ChevronRight className="w-5 h-5 text-slate-400" />
-          )}
+
+          {/* Right side */}
+          <div className="flex items-center gap-3 flex-shrink-0">
+            {total && (
+              <span className="text-xs font-semibold text-emerald-400">
+                {fmt(total.min)}–{fmt(total.max)}
+              </span>
+            )}
+            <span className="text-xs px-2 py-0.5 rounded-full bg-slate-700 text-slate-400">
+              {projects.length}p
+            </span>
+            {isExpanded
+              ? <ChevronUp className="w-4 h-4 text-slate-500" />
+              : <ChevronDown className="w-4 h-4 text-slate-500" />}
+          </div>
         </div>
       </button>
 
-      {isExpanded && (
-        <div className="p-4 bg-slate-850 border-t border-slate-700">
-          {projects.length === 0 ? (
-            <p className="text-slate-400 text-center py-4">No projects found</p>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <AnimatePresence initial={false}>
+        {isExpanded && (
+          <motion.div
+            key="content"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.2, ease: 'easeInOut' }}
+            className="overflow-hidden"
+          >
+            <div className="px-4 pb-4 pt-1 border-t border-slate-700/50 space-y-2">
               {projects.map((project, idx) => (
                 <ProjectCard
                   key={project.project_id || idx}
                   project={project}
-                  budgetEstimate={invoiceProjects[idx]?.budget_estimate}
+                  invoiceData={invoiceProjects[idx]}
                 />
               ))}
             </div>
-          )}
-        </div>
-      )}
-    </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
   );
 }
 
 export default function CompanyList({ data }) {
+  const [showAll, setShowAll] = useState(false);
   const companies = data?.classified?.companies || [];
   const invoiceCompanies = data?.invoice?.companies || [];
 
-  if (companies.length === 0) {
-    return null;
-  }
+  if (companies.length === 0) return null;
 
-  const getInvoiceCompany = (companyName) => {
-    return invoiceCompanies.find((c) => c.company_name === companyName);
-  };
+  const getInvoiceCompany = (name) => invoiceCompanies.find((c) => c.company_name === name);
+
+  const sorted = [...companies].sort((a, b) => {
+    const aInv = getInvoiceCompany(a.company_name);
+    const bInv = getInvoiceCompany(b.company_name);
+    return (bInv?.company_total?.max || 0) - (aInv?.company_total?.max || 0);
+  });
+
+  const CURATED_COUNT = 5;
+  const displayed = showAll ? sorted : sorted.slice(0, CURATED_COUNT);
+  const hidden = sorted.length - CURATED_COUNT;
 
   return (
-    <div className="px-6 py-4 space-y-3">
-      <h2 className="text-lg font-semibold text-white mb-4">Companies & Projects</h2>
-      {companies.map((company, idx) => (
-        <CompanyItem
-          key={company.company_name || idx}
-          company={company}
-          invoiceCompany={getInvoiceCompany(company.company_name)}
-        />
-      ))}
+    <div className="pt-2">
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <Layers className="w-4 h-4 text-slate-400" />
+          <h2 className="text-sm font-semibold text-slate-300 uppercase tracking-wide">Top Opportunities</h2>
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="text-xs text-slate-500">{companies.length} companies · ranked by budget</span>
+          {hidden > 0 && (
+            <button
+              onClick={() => setShowAll(v => !v)}
+              className="text-xs text-violet-400 hover:text-violet-300 transition-colors flex items-center gap-1"
+            >
+              {showAll ? `Show top ${CURATED_COUNT}` : `+${hidden} more`}
+              {showAll ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+            </button>
+          )}
+        </div>
+      </div>
+
+      <motion.div
+        className="space-y-2"
+        initial="hidden"
+        animate="show"
+        variants={{ show: { transition: { staggerChildren: 0.06 } } }}
+      >
+        {displayed.map((company, idx) => (
+          <motion.div
+            key={company.company_name || idx}
+            variants={{ hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0 } }}
+          >
+            <CompanyItem
+              company={company}
+              invoiceCompany={getInvoiceCompany(company.company_name)}
+              rank={idx}
+            />
+          </motion.div>
+        ))}
+      </motion.div>
     </div>
   );
 }

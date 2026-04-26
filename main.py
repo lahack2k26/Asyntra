@@ -23,7 +23,7 @@ limiter = Limiter(key_func=get_remote_address)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-from src.api.routes import get_jobs, health_check
+from src.api.routes import get_jobs, health_check, refresh_invoices, clear_all_caches, debug_scrape
 
 @app.get("/jobs")
 async def jobs_endpoint(request: Request):
@@ -32,6 +32,18 @@ async def jobs_endpoint(request: Request):
 @app.get("/health")
 async def health_endpoint():
     return await health_check()
+
+@app.post("/cache/clear-invoice")
+async def clear_invoice_endpoint():
+    return await refresh_invoices()
+
+@app.post("/cache/clear-all")
+async def clear_all_endpoint():
+    return await clear_all_caches()
+
+@app.get("/debug/scrape")
+async def debug_scrape_endpoint():
+    return await debug_scrape()
 
 if __name__ == "__main__":
     import uvicorn

@@ -5,9 +5,10 @@ from src.core.config import settings
 
 logger = logging.getLogger(__name__)
 
-CACHE_KEY = "freelanceos:jobs"
-CLASSIFIED_CACHE_KEY = "freelanceos:classified"
-INVOICE_CACHE_KEY = "freelanceos:invoices"
+CACHE_KEY = "asyntra:jobs"
+EMAIL_CACHE_KEY = "asyntra:email_jobs"
+CLASSIFIED_CACHE_KEY = "asyntra:classified"
+INVOICE_CACHE_KEY = "asyntra:invoices"
 
 
 def _get_client() -> Redis:

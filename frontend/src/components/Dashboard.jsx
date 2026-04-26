@@ -15,7 +15,7 @@ function Sidebar({ currentView, onNavigate, onBack }) {
   return (
     <aside className="w-56 bg-slate-800 border-r border-slate-700 min-h-screen p-4">
       <div className="mb-8">
-        <h2 className="text-lg font-bold text-white">FreeLanceOS</h2>
+        <h2 className="text-lg font-bold text-white">Asyntra</h2>
       </div>
       <nav className="space-y-2">
         {navItems.map((item) => (

@@ -23,7 +23,7 @@ export default function Navbar() {
     <nav className="bg-slate-900 border-b border-slate-700 px-6 py-4 flex items-center justify-between">
       <div className="flex items-center gap-3">
         <Activity className="w-6 h-6 text-purple-400" />
-        <h1 className="text-xl font-bold text-white">FreeLanceOS</h1>
+        <h1 className="text-xl font-bold text-white">Asyntra</h1>
       </div>
       <div className="flex items-center gap-2">
         <span className="text-sm text-slate-400">Backend Status</span>

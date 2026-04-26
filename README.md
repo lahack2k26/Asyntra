@@ -1,25 +1,27 @@
-# FreeLanceOS
+# Asyntra
 
 AI-powered operating system for software development freelancers. Automatically scrapes job listings, classifies them by client using LLM agents, and generates budget and timeline estimates — surfaced on a live dashboard.
 
 ## Architecture
 
 ```
-Job Sources (Upwork, Fiverr, IndiehHackers, Toptal)
+  Client (Dashboard / curl)
         ↓
-  Firecrawl  —  web scraping
+  FastAPI  —  GET /jobs  GET /health
         ↓
+  Upstash Redis  —  30 min TTL cache (hit → return early)
+        ↓ (cache miss)
+  Firecrawl  —  web scraping (Upwork, Fiverr, IndiehHackers, Toptal)
+              ↓
   JobParserAgent  —  raw markdown → structured jobs  [ASI:1]
-        ↓
-  InboxAgent  —  filter · group by client · enrich requirements  [ASI:1]
-        ↓
+              ↓
+  InboxAgent  —  group by client · enrich requirements  [ASI:1]
+              ↓
   InvoiceAgent  —  budget & timeline estimates  [ASI:1]
-        ↓
-  Upstash Redis  —  30 min TTL cache
-        ↓
-  FastAPI  —  /jobs  /health
-        ↓
-  Next.js Dashboard
+              ↓
+  Upstash Redis  —  cache all stages
+              ↓
+  JSON response → Vite / React Dashboard
 ```
 
 ## Setup
@@ -27,7 +29,7 @@ Job Sources (Upwork, Fiverr, IndiehHackers, Toptal)
 **Backend**
 ```bash
 git clone <repo-url>
-cd FreeLanceOS
+cd Asyntra
 pip install -r requirements.txt
 cp .env.example .env   # fill in your keys
 python main.py         # runs on http://localhost:8000

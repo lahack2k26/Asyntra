@@ -6,7 +6,7 @@ load_dotenv()
 
 class Settings:
     FIRECRAWL_API_KEY: str = os.getenv("FIRECRAWL_API_KEY")
-    ASI_API_KEY: str = os.getenv("ASI_ONE_API_KEY")
+    ASI_API_KEY: str = os.getenv("ASI_ONE_API_KEY") or os.getenv("ASI_API_KEY", "").strip()
     UPSTASH_REDIS_REST_URL: str = os.getenv("UPSTASH_REDIS_REST_URL")
     UPSTASH_REDIS_REST_TOKEN: str = os.getenv("UPSTASH_REDIS_REST_TOKEN")
     URLS_TO_SCRAPE: list = [

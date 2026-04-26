@@ -6,6 +6,14 @@ from slowapi.errors import RateLimitExceeded
 
 logging.basicConfig(level=logging.INFO)
 app = FastAPI(title="FreeLanceOS")
+from fastapi.middleware.cors import CORSMiddleware
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 limiter = Limiter(key_func=get_remote_address)
 app.state.limiter = limiter

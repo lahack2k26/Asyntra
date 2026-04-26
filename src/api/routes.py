@@ -5,6 +5,7 @@ from src.core.cache import (
     load_cache, save_cache,
     load_classified_cache, save_classified_cache,
     load_invoice_cache, save_invoice_cache,
+    clear_invoice_cache, clear_all_cache,
 )
 from src.core.scraper import scrape
 from src.agents.job_parser_agent import JobParserAgent
@@ -21,7 +22,7 @@ async def get_jobs(request: Request):
     classified = load_classified_cache()
     invoice = load_invoice_cache()
 
-    if jobs and classified and invoice:
+    if jobs is not None and classified is not None and invoice is not None:
         logger.info("All stages cached — returning from Redis")
         return {"source": "cache", "jobs": jobs, "classified": classified, "invoice": invoice}
 
@@ -50,3 +51,57 @@ async def get_jobs(request: Request):
 
 async def health_check():
     return {"status": "healthy"}
+
+
+async def debug_scrape():
+    """Returns raw scrape markdown preview + parsed job count per URL for debugging."""
+    results = scrape()
+    output = []
+    for item in results:
+        if not item.get('success'):
+            output.append({"url": item.get('data', {}).get('sourceURL', '?'), "success": False})
+            continue
+        data = item.get('data', {})
+        markdown = data.get('markdown', '')
+        url = data.get('sourceURL') or data.get('url', '?')
+        jobs = JobParserAgent()._parse(markdown, url)
+        output.append({
+            "url": url,
+            "markdown_length": len(markdown),
+            "markdown_preview": markdown[:500],
+            "jobs_parsed": len(jobs),
+            "job_titles": [j.get('project', {}).get('title') for j in jobs[:5]],
+        })
+    return {"sources": output}
+
+
+async def clear_all_caches():
+    logger.info("POST /cache/clear-all called")
+    try:
+        clear_all_cache()
+        return {"status": "all caches cleared"}
+    except Exception as e:
+        logger.error(f"Clear all cache error: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+async def refresh_invoices():
+    logger.info("POST /cache/clear-invoice called")
+    try:
+        classified = load_classified_cache()
+        if not classified:
+            logger.info("No classified cache — running full pipeline first")
+            jobs = load_cache()
+            if not jobs:
+                jobs = JobParserAgent().process(scrape())
+                save_cache(jobs)
+            classified = InboxAgent().process(jobs)
+            save_classified_cache(classified)
+        clear_invoice_cache()
+        invoice = InvoiceAgent().process(classified)
+        save_invoice_cache(invoice)
+        logger.info("Invoice cache refreshed with new metrics")
+        return {"status": "refreshed", "invoice": invoice}
+    except Exception as e:
+        logger.error(f"Invoice refresh error: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))

@@ -88,3 +88,25 @@ def save_invoice_cache(invoice_data):
     except Exception as e:
         logger.error(f"Error saving invoice cache: {e}")
         raise
+
+
+def clear_invoice_cache():
+    try:
+        redis = _get_client()
+        redis.delete(INVOICE_CACHE_KEY)
+        logger.info("Invoice cache cleared")
+    except Exception as e:
+        logger.error(f"Error clearing invoice cache: {e}")
+        raise
+
+
+def clear_all_cache():
+    try:
+        redis = _get_client()
+        redis.delete(CACHE_KEY)
+        redis.delete(CLASSIFIED_CACHE_KEY)
+        redis.delete(INVOICE_CACHE_KEY)
+        logger.info("All caches cleared")
+    except Exception as e:
+        logger.error(f"Error clearing all caches: {e}")
+        raise

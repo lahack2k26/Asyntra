@@ -33,14 +33,15 @@ class JobParserAgent(BaseAgent):
             logger.info(f"Parsing {source_url}, markdown length: {len(markdown)}")
             logger.info(f"Markdown preview: {markdown[:500]}...")
             
+            truncated = markdown[:8000]
             messages = [
                 {"role": "system", "content": self.system_prompt},
-                {"role": "user", "content": f"Source: {source_url}\n\nContent:\n{markdown}"}
+                {"role": "user", "content": f"Source: {source_url}\n\nContent:\n{truncated}"}
             ]
             response = self.client.chat_completion(messages)
             logger.info(f"ASI response: {response[:500]}...")
-            
-            jobs = json.loads(response)
+            clean = response.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
+            jobs = json.loads(clean)
             return jobs if isinstance(jobs, list) else []
         except Exception as e:
             logger.error(f"Parse error: {e}", exc_info=True)

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Play, Loader2, AlertCircle, Inbox, Users, Building2, FileText, DollarSign, Clock, ChevronDown, ChevronUp, Home, FolderKanban, UserSearch } from 'lucide-react';
 import Navbar from './Navbar';
 import SummaryCards from './SummaryCards';
@@ -9,33 +10,37 @@ function Sidebar({ currentView, onNavigate, onBack }) {
   const navItems = [
     { id: 'home', label: 'Home', icon: Home, action: onBack },
     { id: 'pipeline', label: 'Current Projects', icon: FolderKanban, action: () => onNavigate('pipeline') },
-    { id: 'leads', label: 'Leads', icon: UserSearch, action: () => onNavigate('leads') },
+    { id: 'leads', label: 'Prospects', icon: UserSearch, action: () => onNavigate('leads') },
   ];
 
   return (
-    <aside className="w-56 bg-slate-800 border-r border-slate-700 min-h-screen p-4">
-      <div className="mb-8">
-        <h2 className="text-lg font-bold text-white">Asyntra</h2>
-      </div>
-      <nav className="space-y-2">
-        {navItems.map((item) => (
-          <button
-            key={item.id}
-            onClick={item.action}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${
-              currentView === item.id || (item.id === 'home' && currentView === 'menu')
-                ? 'bg-purple-600/30 text-purple-400 border border-purple-500/30'
-                : 'text-slate-400 hover:bg-slate-700 hover:text-white'
-            }`}
-          >
-            <item.icon className="w-5 h-5" />
-            <span className="font-medium">{item.label}</span>
-          </button>
-        ))}
-      </nav>
+    <aside className="w-44 bg-slate-800/80 border-r border-slate-700/60 min-h-screen py-6 px-3 flex flex-col gap-1">
+      {navItems.map((item) => (
+        <button
+          key={item.id}
+          onClick={item.action}
+          title={item.label}
+          className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-left transition-all text-sm ${
+            currentView === item.id || (item.id === 'home' && currentView === 'menu')
+              ? 'bg-violet-600/20 text-violet-300 border border-violet-500/30'
+              : 'text-slate-500 hover:bg-slate-700/60 hover:text-slate-200'
+          }`}
+        >
+          <item.icon className="w-4 h-4 flex-shrink-0" />
+          <span className="font-medium truncate">{item.label}</span>
+        </button>
+      ))}
     </aside>
   );
 }
+
+const COMPANY_ACCENTS = [
+  { border: 'border-t-violet-500', icon: 'bg-violet-900/40 text-violet-400', badge: 'bg-violet-900/30 text-violet-300' },
+  { border: 'border-t-sky-500',    icon: 'bg-sky-900/40 text-sky-400',       badge: 'bg-sky-900/30 text-sky-300' },
+  { border: 'border-t-emerald-500',icon: 'bg-emerald-900/40 text-emerald-400',badge: 'bg-emerald-900/30 text-emerald-300' },
+  { border: 'border-t-rose-500',   icon: 'bg-rose-900/40 text-rose-400',      badge: 'bg-rose-900/30 text-rose-300' },
+  { border: 'border-t-amber-500',  icon: 'bg-amber-900/40 text-amber-400',    badge: 'bg-amber-900/30 text-amber-300' },
+];
 
 function LeadsView({ data }) {
   const [expandedProjects, setExpandedProjects] = useState({});
@@ -45,138 +50,196 @@ function LeadsView({ data }) {
   };
 
   const companies = data?.classified?.companies || [];
+  const invoiceCompanies = data?.invoice?.companies || [];
+
+  const getInvoiceProject = (companyName, projectIdx) => {
+    const ic = invoiceCompanies.find(c => c.company_name === companyName);
+    return ic?.projects?.[projectIdx] || null;
+  };
+
+  const formatCurrency = (v) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(v);
 
   if (companies.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-slate-400">
         <Inbox className="w-16 h-16 mb-4 text-slate-600" />
-        <p className="text-lg">No leads available</p>
+        <p className="text-lg">No prospects yet</p>
         <p className="text-sm text-slate-500">Run the pipeline first to discover potential projects</p>
       </div>
     );
   }
 
+  const totalProjects = companies.reduce((acc, c) => acc + (c.projects?.length || 0), 0);
+
   return (
-    <div className="px-6 space-y-6">
+    <div className="space-y-5">
+      {/* Header */}
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-white">Potential Projects</h2>
-        <span className="text-sm text-slate-400">
-          {companies.reduce((acc, c) => acc + (c.projects?.length || 0), 0)} projects from {companies.length} companies
-        </span>
+        <h2 className="text-2xl font-bold text-white">Prospects</h2>
+        <span className="text-sm text-slate-400">{totalProjects} projects · {companies.length} companies</span>
       </div>
 
-      {companies.map((company, companyIdx) => (
-        <div key={companyIdx} className="bg-slate-800 border border-slate-700 rounded-xl overflow-hidden">
-          {/* Company Header */}
-          <div className="px-5 py-4 bg-slate-800/50 border-b border-slate-700 flex items-center gap-3">
-            <div className="p-2 bg-blue-900/30 rounded-lg">
-              <Building2 className="w-5 h-5 text-blue-400" />
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold text-white">{company.company_name}</h3>
-              {company.client_profile && (
-                <p className="text-sm text-slate-400">
-                  {company.client_profile.industry && <span>{company.client_profile.industry}</span>}
-                  {company.client_profile.location && <span> • {company.client_profile.location}</span>}
-                  {company.client_profile.budget_tier && <span> • {company.client_profile.budget_tier} budget</span>}
-                </p>
-              )}
-            </div>
-            <span className="ml-auto text-sm text-slate-500">{company.projects?.length || 0} projects</span>
-          </div>
+      {/* 2-column company grid */}
+      <motion.div
+        className="grid grid-cols-1 xl:grid-cols-2 gap-5"
+        initial="hidden"
+        animate="show"
+        variants={{ show: { transition: { staggerChildren: 0.1 } } }}
+      >
+        {companies.map((company, companyIdx) => {
+          const accent = COMPANY_ACCENTS[companyIdx % COMPANY_ACCENTS.length];
+          const profile = company.client_profile || {};
 
-          {/* Projects */}
-          <div className="divide-y divide-slate-700">
-            {(company.projects || []).map((project, projectIdx) => {
-              const key = `${companyIdx}-${projectIdx}`;
-              const isExpanded = expandedProjects[key];
-              const requirements = Array.isArray(project.requirements) 
-                ? project.requirements 
-                : typeof project.requirements === 'object' 
-                  ? Object.values(project.requirements).flat()
-                  : [];
-
-              return (
-                <div key={projectIdx} className="bg-slate-800/30">
-                  {/* Project Header */}
-                  <button
-                    onClick={() => toggleProject(key)}
-                    className="w-full px-5 py-4 flex items-center gap-4 hover:bg-slate-700/30 transition-colors"
-                  >
-                    <FileText className="w-5 h-5 text-purple-400 flex-shrink-0" />
-                    <div className="flex-1 text-left">
-                      <h4 className="text-white font-medium">{project.title}</h4>
-                      {project.category && (
-                        <span className="text-xs text-slate-500 capitalize">{project.category}</span>
-                      )}
-                    </div>
-                    {project.budget_estimate && (
-                      <div className="flex items-center gap-1 text-green-400 text-sm">
-                        <DollarSign className="w-4 h-4" />
-                        <span>
-                          {project.budget_estimate.min?.toLocaleString()} - {project.budget_estimate.max?.toLocaleString()} {project.budget_estimate.currency}
-                        </span>
-                      </div>
-                    )}
-                    {project.timeline_weeks && (
-                      <div className="flex items-center gap-1 text-slate-400 text-sm">
-                        <Clock className="w-4 h-4" />
-                        <span>{project.timeline_weeks} weeks</span>
-                      </div>
-                    )}
-                    {isExpanded ? (
-                      <ChevronUp className="w-5 h-5 text-slate-500" />
-                    ) : (
-                      <ChevronDown className="w-5 h-5 text-slate-500" />
-                    )}
-                  </button>
-
-                  {/* Expanded Details */}
-                  {isExpanded && (
-                    <div className="px-5 pb-4 pt-2 ml-9 space-y-4">
-                      {/* Requirements */}
-                      {requirements.length > 0 && (
-                        <div>
-                          <h5 className="text-sm font-medium text-slate-300 mb-2">Requirements</h5>
-                          <ul className="space-y-1">
-                            {requirements.map((req, i) => (
-                              <li key={i} className="text-sm text-slate-400 flex items-start gap-2">
-                                <span className="text-purple-400 mt-1">•</span>
-                                <span>{req}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-
-                      {/* Metadata */}
-                      {project.metadata && (
-                        <div className="flex flex-wrap gap-2">
-                          {project.metadata.complexity && (
-                            <span className={`px-2 py-1 rounded text-xs font-medium ${
-                              project.metadata.complexity === 'simple' ? 'bg-green-900/30 text-green-400' :
-                              project.metadata.complexity === 'moderate' ? 'bg-yellow-900/30 text-yellow-400' :
-                              'bg-red-900/30 text-red-400'
-                            }`}>
-                              {project.metadata.complexity} complexity
-                            </span>
-                          )}
-                          {project.metadata.urgency && (
-                            <span className="px-2 py-1 rounded text-xs font-medium bg-slate-700 text-slate-300">
-                              {project.metadata.urgency} urgency
-                            </span>
-                          )}
-                        </div>
-                      )}
-
-                    </div>
-                  )}
+          return (
+            <motion.div
+              key={companyIdx}
+              variants={{ hidden: { opacity: 0, y: 24 }, show: { opacity: 1, y: 0 } }}
+              className={`rounded-2xl border-t-4 ${accent.border} bg-slate-800/60 backdrop-blur border border-slate-700/60 shadow-xl overflow-hidden`}
+            >
+              {/* Company header */}
+              <div className="px-5 pt-4 pb-3 flex items-start gap-3">
+                <div className={`p-2 rounded-xl ${accent.icon}`}>
+                  <Building2 className="w-5 h-5" />
                 </div>
-              );
-            })}
-          </div>
-        </div>
-      ))}
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-base font-bold text-white leading-tight">{company.company_name}</h3>
+                  <p className="text-xs text-slate-400 mt-0.5 truncate">
+                    {[profile.industry, profile.location, profile.budget_tier && `${profile.budget_tier} budget`]
+                      .filter(Boolean).join(' · ')}
+                  </p>
+                </div>
+                <span className={`text-xs font-medium px-2 py-1 rounded-full ${accent.badge} whitespace-nowrap`}>
+                  {company.projects?.length || 0} project{company.projects?.length !== 1 ? 's' : ''}
+                </span>
+              </div>
+
+              {/* Divider */}
+              <div className="h-px bg-slate-700/60 mx-4" />
+
+              {/* Projects */}
+              <div className="p-3 space-y-2">
+                {(company.projects || []).map((project, projectIdx) => {
+                  const key = `${companyIdx}-${projectIdx}`;
+                  const isExpanded = expandedProjects[key];
+                  const invoice = getInvoiceProject(company.company_name, projectIdx);
+                  const budget = invoice?.budget_estimate;
+                  const workload = invoice?.workload_metrics;
+                  const risk = invoice?.risk_assessment;
+                  const requirements = Array.isArray(project.requirements)
+                    ? project.requirements
+                    : typeof project.requirements === 'object'
+                      ? Object.values(project.requirements).flat()
+                      : [];
+                  const complexity = project.metadata?.complexity;
+                  const urgency = project.metadata?.urgency;
+                  const riskScore = risk?.overall_risk_score;
+
+                  return (
+                    <div key={projectIdx} className="rounded-xl bg-slate-900/60 border border-slate-700/50 overflow-hidden">
+                      {/* Project row */}
+                      <button
+                        onClick={() => toggleProject(key)}
+                        className="w-full px-4 py-3 flex items-start gap-3 hover:bg-slate-700/30 transition-colors text-left"
+                      >
+                        <FileText className="w-4 h-4 text-purple-400 flex-shrink-0 mt-0.5" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-white leading-snug">{project.title}</p>
+                          {project.category && (
+                            <p className="text-xs text-slate-500 capitalize mt-0.5">{project.category}</p>
+                          )}
+                          {/* Inline metrics row */}
+                          <div className="flex flex-wrap items-center gap-2 mt-2">
+                            {budget && (
+                              <span className="flex items-center gap-1 text-xs text-emerald-400 font-medium">
+                                <DollarSign className="w-3 h-3" />
+                                {formatCurrency(budget.min)} – {formatCurrency(budget.max)}
+                              </span>
+                            )}
+                            {workload && (
+                              <span className="flex items-center gap-1 text-xs text-sky-400">
+                                <Clock className="w-3 h-3" />
+                                {workload.weeks_at_40hrs_min}–{workload.weeks_at_40hrs_max} wks
+                              </span>
+                            )}
+                            {riskScore != null && (
+                              <span className={`text-xs font-medium px-1.5 py-0.5 rounded ${
+                                riskScore >= 7 ? 'bg-red-900/40 text-red-400' :
+                                riskScore >= 4 ? 'bg-yellow-900/40 text-yellow-400' :
+                                'bg-green-900/40 text-green-400'
+                              }`}>
+                                Risk {riskScore}/10
+                              </span>
+                            )}
+                            {complexity && (
+                              <span className={`text-xs px-1.5 py-0.5 rounded ${
+                                complexity === 'simple' ? 'bg-green-900/30 text-green-400' :
+                                complexity === 'moderate' ? 'bg-yellow-900/30 text-yellow-400' :
+                                'bg-red-900/30 text-red-400'
+                              }`}>{complexity}</span>
+                            )}
+                            {urgency && (
+                              <span className="text-xs px-1.5 py-0.5 rounded bg-slate-700 text-slate-300">{urgency} urgency</span>
+                            )}
+                          </div>
+                        </div>
+                        {isExpanded
+                          ? <ChevronUp className="w-4 h-4 text-slate-500 flex-shrink-0 mt-1" />
+                          : <ChevronDown className="w-4 h-4 text-slate-500 flex-shrink-0 mt-1" />}
+                      </button>
+
+                      {/* Expanded details */}
+                      <AnimatePresence initial={false}>
+                      {isExpanded && (
+                        <motion.div
+                          key="detail"
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          transition={{ duration: 0.2 }}
+                          className="overflow-hidden"
+                        >
+                        <div className="px-4 pb-4 pt-1 border-t border-slate-700/50 space-y-3">
+                          {requirements.length > 0 && (
+                            <div>
+                              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">Requirements</p>
+                              <ul className="space-y-1">
+                                {requirements.map((req, i) => (
+                                  <li key={i} className="text-xs text-slate-400 flex items-start gap-2">
+                                    <span className="text-purple-400 mt-0.5 flex-shrink-0">›</span>
+                                    <span>{req}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                          {risk?.risk_factors?.length > 0 && (
+                            <div>
+                              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">Risk Factors</p>
+                              <ul className="space-y-1">
+                                {risk.risk_factors.map((r, i) => (
+                                  <li key={i} className="text-xs text-red-400/80 flex items-start gap-2">
+                                    <span className="flex-shrink-0 mt-0.5">⚠</span>
+                                    <span>{r}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                          {workload?.recommended_weekly_commitment && (
+                            <p className="text-xs text-sky-400/80 italic">{workload.recommended_weekly_commitment}</p>
+                          )}
+                        </div>
+                        </motion.div>
+                      )}
+                      </AnimatePresence>
+                    </div>
+                  );
+                })}
+              </div>
+            </motion.div>
+          );
+        })}
+      </motion.div>
     </div>
   );
 }
@@ -220,11 +283,11 @@ export default function Dashboard({ onBack }) {
   };
 
   return (
-    <div className="min-h-screen bg-slate-900">
+    <div className="min-h-screen bg-slate-900 flex flex-col">
       <Navbar />
 
-      <main className="max-w-7xl mx-auto py-6">
-        {view === 'menu' && (
+      {view === 'menu' && (
+        <main className="max-w-4xl mx-auto py-6 w-full">
           <>
             {onBack && (
               <div className="px-6 mb-4">
@@ -257,19 +320,20 @@ export default function Dashboard({ onBack }) {
                   <div className="p-4 bg-blue-900/30 rounded-full group-hover:bg-blue-900/50 transition-colors">
                     <Users className="w-10 h-10 text-blue-400" />
                   </div>
-                  <span className="text-xl font-semibold text-white">Leads</span>
-                  <span className="text-sm text-slate-400">View and manage leads</span>
+                  <span className="text-xl font-semibold text-white">Prospects</span>
+                  <span className="text-sm text-slate-400">Browse potential clients</span>
                 </button>
               </div>
             </div>
           </>
-        )}
+        </main>
+      )}
 
-        {(view === 'pipeline' || view === 'leads') && (
-          <div className="flex">
-            <Sidebar currentView={view} onNavigate={handleNavigate} onBack={onBack} />
-            
-            <div className="flex-1 p-6">
+      {(view === 'pipeline' || view === 'leads') && (
+        <div className="flex flex-1">
+          <Sidebar currentView={view} onNavigate={handleNavigate} onBack={onBack} />
+          
+          <div className="flex-1 p-6 overflow-y-auto">
               {view === 'pipeline' && (
                 <>
                   {/* Error State */}
@@ -300,7 +364,10 @@ export default function Dashboard({ onBack }) {
                   {/* Data Display */}
                   {!loading && data && (
                     <>
-                      <SummaryCards data={data} />
+                      <SummaryCards
+                        data={data}
+                        onInvoiceRefreshed={(invoice) => setData(prev => ({ ...prev, invoice }))}
+                      />
                       <CompanyList data={data} />
                     </>
                   )}
@@ -332,8 +399,7 @@ export default function Dashboard({ onBack }) {
               )}
             </div>
           </div>
-        )}
-      </main>
+      )}
     </div>
   );
 }

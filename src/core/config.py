@@ -14,6 +14,7 @@ class Settings:
         "https://www.upwork.com/nx/jobs/search/",
         "https://www.toptal.com/developers",
         "https://www.fiverr.com/categories/programming-tech",
+        "https://www.peopleperhour.com/services/technology-programming"
     ]
     CACHE_TTL_SECONDS: int = 1800
     RATE_LIMIT: str = "5/hour"

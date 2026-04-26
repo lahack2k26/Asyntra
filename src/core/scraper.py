@@ -23,6 +23,7 @@ def scrape():
         payload = {
             "url": target_url,
             "formats": ["markdown"],
+            "waitFor": 3000,
         }
 
         try:
@@ -30,7 +31,7 @@ def scrape():
                 firecrawl_url,
                 json=payload,
                 headers=headers,
-                timeout=10,
+                timeout=40,
             )
             logger.info(f"Response status: {response.status_code}")
             response.raise_for_status()

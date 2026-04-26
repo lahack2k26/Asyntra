@@ -4,7 +4,7 @@ AI-powered operating system for software development freelancers. Automatically 
 
 ## Features
 
-- **Automated Job Scraping** — Pulls live listings from Upwork, Fiverr, IndieHackers, and Toptal via Firecrawl
+- **Automated Job Scraping** — Pulls live listings from multiple websites via Firecrawl
 - **LLM Job Parsing** — Converts raw scraped markdown into structured job objects with category, complexity, urgency, and budget fields
 - **Client Inbox & Classification** — Groups jobs by client/company, enriches each project with detailed functional and non-functional requirements using an AI agent
 - **Invoice Generation** — Automatically estimates budget ranges and timelines for every project using a dedicated invoicing agent

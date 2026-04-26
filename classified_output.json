@@ -1,0 +1,105 @@
+{
+  "classified_at": "2026-04-25T12:29:53.742129+00:00",
+  "total_companies": 2,
+  "total_projects": 2,
+  "companies": [
+    {
+      "company_id": "verde_solar_power",
+      "company_name": "Verde Solar Power",
+      "client_profile": {
+        "type": "individual",
+        "industry": "Solar Energy",
+        "location": null,
+        "budget_tier": "low"
+      },
+      "projects": [
+        {
+          "project_id": "FW-2026-003",
+          "title": "VSP Logo Re-imagined",
+          "source_platform": "upwork",
+          "source_url": "https://www.upwork.com/jobs/VSP-Logo-imagined_~021961461537889921207/?referrer_url_path=/nx/search/jobs/",
+          "timestamp": "2025-01-09T00:00:00Z",
+          "metadata": {
+            "category": "design",
+            "complexity": "simple",
+            "urgency": "low",
+            "duration_estimate": "weeks",
+            "budget": null
+          },
+          "category": "design",
+          "technical_requirements": {
+            "tools": [],
+            "platforms": [],
+            "languages_frameworks": [],
+            "infrastructure": [],
+            "other": []
+          },
+          "requirements": {
+            "functional": [
+              "create alternative logo versions for Verde Solar Power",
+              "ensure print-ready quality for marketing materials",
+              "ensure print-ready quality for apparel",
+              "align designs with sister company branding"
+            ],
+            "non_functional": [
+              "logo design experience",
+              "print design capability",
+              "brand alignment expertise"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "company_id": "jimmysofficecom",
+      "company_name": "JimmysOffice.com",
+      "client_profile": {
+        "type": "individual",
+        "industry": "E-commerce",
+        "location": null,
+        "budget_tier": "medium"
+      },
+      "projects": [
+        {
+          "project_id": "FW-2026-005",
+          "title": "JimmysOffice.com needs HELP with Tiktok",
+          "source_platform": "upwork",
+          "source_url": "https://www.upwork.com/jobs/JimmysOffice-com-needs-HELP-with-Tiktok_~021958997661909713211/?referrer_url_path=/nx/search/jobs/",
+          "timestamp": "2025-01-09T00:00:00Z",
+          "metadata": {
+            "category": "sales_marketing",
+            "complexity": "moderate",
+            "urgency": "high",
+            "duration_estimate": "weeks",
+            "budget": "$55.00 - $95.00/hr"
+          },
+          "category": "sales_marketing",
+          "technical_requirements": {
+            "tools": [],
+            "platforms": [
+              "TikTok",
+              "TikTok Shop"
+            ],
+            "languages_frameworks": [],
+            "infrastructure": [],
+            "other": []
+          },
+          "requirements": {
+            "functional": [
+              "TikTok Shop account setup and configuration",
+              "product listing for leather cell phone holders",
+              "de-listing issue resolution and reinstatement",
+              "e-commerce platform integration"
+            ],
+            "non_functional": [
+              "expert knowledge of TikTok Shop policies",
+              "experience resolving de-listing issues",
+              "e-commerce platform expertise",
+              "compliance with TikTok Shop listing guidelines"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

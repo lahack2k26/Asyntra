@@ -1,0 +1,42 @@
+# Virtual Environment
+.venv/
+venv/
+ENV/
+env/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+
+# Environment Variables
+.env
+
+# Cache
+jobs.json
+classified_output.json
+token.json
+
+# Frontend build artifacts
+frontend/.next/
+frontend/dist/
+frontend/node_modules/
+frontend/next-env.d.ts
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# macOS
+.DS_Store
+
+# Logs
+*.log

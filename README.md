@@ -2,6 +2,17 @@
 
 AI-powered operating system for software development freelancers. Automatically scrapes job listings, classifies them by client using LLM agents, and generates budget and timeline estimates — surfaced on a live dashboard.
 
+## Features
+
+- **Automated Job Scraping** — Pulls live listings from Upwork, Fiverr, IndieHackers, and Toptal via Firecrawl
+- **LLM Job Parsing** — Converts raw scraped markdown into structured job objects with category, complexity, urgency, and budget fields
+- **Client Inbox & Classification** — Groups jobs by client/company, enriches each project with detailed functional and non-functional requirements using an AI agent
+- **Invoice Generation** — Automatically estimates budget ranges and timelines for every project using a dedicated invoicing agent
+- **Gmail Integration** — Scans your inbox for inbound freelance opportunities and feeds them through the same pipeline
+- **Redis Caching** — All three pipeline stages are individually cached in Upstash Redis with a 30-minute TTL to avoid redundant LLM calls
+- **Live Dashboard** — React frontend with a pipeline view (active projects + invoices) and a leads view (classified companies and requirements)
+- **FastAPI Backend** — Single `/jobs` endpoint orchestrates the full scrape → parse → classify → invoice pipeline with structured logging at every stage
+
 ## Architecture
 
 ```

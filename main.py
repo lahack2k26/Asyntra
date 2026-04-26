@@ -5,7 +5,7 @@ from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 
 logging.basicConfig(level=logging.INFO)
-app = FastAPI(title="FreeLanceOS")
+app = FastAPI(title="Asyntra")
 from fastapi.middleware.cors import CORSMiddleware
 
 app.add_middleware(

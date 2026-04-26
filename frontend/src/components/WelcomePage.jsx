@@ -22,7 +22,7 @@ export default function WelcomePage({ onGetStarted }) {
         
         {/* Title */}
         <h1 className="text-4xl font-bold text-white mb-6">
-          FreeLanceOS
+          Asyntra
         </h1>
         
         {/* Description */}
